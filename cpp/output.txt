@@ -1,0 +1,25 @@
+=== Polymorphism: fare() and rideDetails() on mixed Ride list ===
+Ride #101 [Standard] Airport -> Downtown, 12.5 mi, fare $23.88
+Ride #102 [Premium] Hotel -> Convention Center, 6.0 mi, fare $24.50
+    (includes $5.00 premium service fee, luxury vehicle)
+Ride #103 [Shared x3] Campus -> Mall, 8.0 mi, fare $4.33
+Ride #104 [Standard] Library -> Stadium, 4.2 mi, fare $9.35
+Total fares: $62.06
+
+=== Drivers ===
+Driver #1 Maria Lopez | rating 4.9 | rides completed: 2 | earnings $28.21
+  - Ride #101 [Standard] Airport -> Downtown, 12.5 mi, fare $23.88
+  - Ride #103 [Shared x3] Campus -> Mall, 8.0 mi, fare $4.33
+Driver #2 James Chen | rating 4.6 | rides completed: 2 | earnings $33.85
+  - Ride #102 [Premium] Hotel -> Convention Center, 6.0 mi, fare $24.50
+    (includes $5.00 premium service fee, luxury vehicle)
+  - Ride #104 [Standard] Library -> Stadium, 4.2 mi, fare $9.35
+
+=== Riders ===
+Rider #10 Alice Johnson - ride history (2):
+  - Ride #101 [Standard] Airport -> Downtown, 12.5 mi, fare $23.88
+  - Ride #102 [Premium] Hotel -> Convention Center, 6.0 mi, fare $24.50
+    (includes $5.00 premium service fee, luxury vehicle)
+Rider #11 Bob Smith - ride history (2):
+  - Ride #103 [Shared x3] Campus -> Mall, 8.0 mi, fare $4.33
+  - Ride #104 [Standard] Library -> Stadium, 4.2 mi, fare $9.35

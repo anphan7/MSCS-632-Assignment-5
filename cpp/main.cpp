@@ -1,5 +1,7 @@
 // Ride Sharing System - C++ implementation
 // Demonstrates encapsulation, inheritance, and polymorphism.
+//
+// Build: clang++ -std=c++17 -o ridesharing main.cpp && ./ridesharing
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -7,8 +9,10 @@
 #include <vector>
 
 // ---------------------------------------------------------------- Ride (base)
+// Base class holding the details every ride has. Subclasses change how the
+// fare is calculated by overriding the virtual methods (polymorphism).
 class Ride {
-protected:  // accessible to subclasses, hidden from outside code
+protected:  // ENCAPSULATION: visible to subclasses, hidden from outside code
     int rideID;
     std::string pickupLocation;
     std::string dropoffLocation;
@@ -18,12 +22,15 @@ public:
     Ride(int id, std::string pickup, std::string dropoff, double miles)
         : rideID(id), pickupLocation(std::move(pickup)),
           dropoffLocation(std::move(dropoff)), distance(miles) {}
-    virtual ~Ride() = default;
+    virtual ~Ride() = default;  // virtual so deleting via Ride* is safe
 
-    // Polymorphic interface
+    // Default fare; subclasses override this. "virtual" makes the call
+    // resolve at run time, based on the object's real type.
     virtual double fare() const { return distance * 1.50; }
     virtual std::string rideType() const { return "Basic"; }
 
+    // Prints one line of ride info. It calls fare() and rideType(), so each
+    // subclass automatically prints its own fare and type name.
     virtual void rideDetails() const {
         std::cout << "Ride #" << rideID << " [" << rideType() << "] "
                   << pickupLocation << " -> " << dropoffLocation << ", "
@@ -35,14 +42,16 @@ public:
 };
 
 // ------------------------------------------------------------- StandardRide
+// INHERITANCE: reuses Ride's fields and constructor; only the fare differs.
 class StandardRide : public Ride {
 public:
-    using Ride::Ride;
+    using Ride::Ride;  // inherit the base constructor
     double fare() const override { return 2.00 + distance * 1.75; }  // base + per mile
     std::string rideType() const override { return "Standard"; }
 };
 
 // -------------------------------------------------------------- PremiumRide
+// Higher per-mile rate plus a flat service fee.
 class PremiumRide : public Ride {
     static constexpr double kServiceFee = 5.00;
 
@@ -51,7 +60,8 @@ public:
     double fare() const override { return kServiceFee + distance * 3.25; }
     std::string rideType() const override { return "Premium"; }
 
-    void rideDetails() const override {  // extends base behaviour
+    // Extends the base version: print the normal line, then add a note.
+    void rideDetails() const override {
         Ride::rideDetails();
         std::cout << "    (includes $" << std::fixed << std::setprecision(2)
                   << kServiceFee << " premium service fee, luxury vehicle)\n";
@@ -59,36 +69,42 @@ public:
 };
 
 // ---------------------------------------------------------------- SharedRide
+// Adds its own field (passengers); the per-mile cost is split among them.
 class SharedRide : public Ride {
     int passengers;
 
 public:
     SharedRide(int id, std::string p, std::string d, double miles, int pax)
         : Ride(id, std::move(p), std::move(d), miles), passengers(pax) {}
-    double fare() const override {  // discounted per passenger
-        return (1.25 * distance) / (passengers > 0 ? passengers : 1) + 1.00;
+    double fare() const override {
+        return (1.25 * distance) / (passengers > 0 ? passengers : 1) + 1.00;  // avoid /0
     }
     std::string rideType() const override { return "Shared x" + std::to_string(passengers); }
 };
 
 // -------------------------------------------------------------------- Driver
+// A driver and the rides they completed. The list is private (ENCAPSULATION),
+// so it can only change through addRide(). shared_ptr<Ride> lets the list hold
+// any ride subtype and share ownership with the rider.
 class Driver {
     int driverID;
     std::string name;
     double rating;
-    std::vector<std::shared_ptr<Ride>> assignedRides;  // private: encapsulated
+    std::vector<std::shared_ptr<Ride>> assignedRides;
 
 public:
     Driver(int id, std::string n, double r) : driverID(id), name(std::move(n)), rating(r) {}
 
     void addRide(std::shared_ptr<Ride> ride) { assignedRides.push_back(std::move(ride)); }
 
+    // Sum of all fares; each fare() call picks the right formula per ride type.
     double totalEarnings() const {
         double total = 0;
         for (const auto& r : assignedRides) total += r->fare();
         return total;
     }
 
+    // Prints driver details followed by each completed ride.
     void getDriverInfo() const {
         std::cout << "Driver #" << driverID << " " << name << " | rating "
                   << std::fixed << std::setprecision(1) << rating << " | rides completed: "
@@ -99,6 +115,7 @@ public:
 };
 
 // --------------------------------------------------------------------- Rider
+// A rider and the rides they requested (private, same idea as Driver).
 class Rider {
     int riderID;
     std::string name;
@@ -109,6 +126,7 @@ public:
 
     void requestRide(std::shared_ptr<Ride> ride) { requestedRides.push_back(std::move(ride)); }
 
+    // Prints the rider's ride history.
     void viewRides() const {
         std::cout << "Rider #" << riderID << " " << name << " - ride history ("
                   << requestedRides.size() << "):\n";
@@ -118,6 +136,7 @@ public:
 
 // ---------------------------------------------------------------------- main
 int main() {
+    // POLYMORPHISM: one list holds different ride types, all accessed as Ride.
     std::vector<std::shared_ptr<Ride>> rides = {
         std::make_shared<StandardRide>(101, "Airport", "Downtown", 12.5),
         std::make_shared<PremiumRide>(102, "Hotel", "Convention Center", 6.0),
@@ -125,6 +144,7 @@ int main() {
         std::make_shared<StandardRide>(104, "Library", "Stadium", 4.2),
     };
 
+    // Same call on every element; each ride runs its own fare() and rideDetails().
     std::cout << "=== Polymorphism: fare() and rideDetails() on mixed Ride list ===\n";
     double total = 0;
     for (const auto& r : rides) {
@@ -136,7 +156,7 @@ int main() {
     Driver d1(1, "Maria Lopez", 4.9), d2(2, "James Chen", 4.6);
     Rider r1(10, "Alice Johnson"), r2(11, "Bob Smith");
 
-    // Rider requests, driver completes
+    // Each ride is requested by a rider and completed by a driver.
     r1.requestRide(rides[0]); d1.addRide(rides[0]);
     r1.requestRide(rides[1]); d2.addRide(rides[1]);
     r2.requestRide(rides[2]); d1.addRide(rides[2]);
